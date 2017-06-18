@@ -114,6 +114,7 @@ class Visvim(threading.Thread):
 
     def run(self):
         chromeOptions = webdriver.ChromeOptions()
+        chromeOptions.add_argument("headless")
         prefs = {"profile.managed_default_content_settings.images": 2}
         chromeOptions.add_experimental_option("prefs", prefs)
 

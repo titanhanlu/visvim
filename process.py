@@ -1,6 +1,5 @@
 #-*-coding:utf-8-*-
 from visvim import Visvim
-from pyvirtualdisplay import Display
 import os,json
 import urllib2
 
@@ -47,8 +46,6 @@ if __name__ == "__main__":
     # print configStr
 
     configs = json.loads(configStr)
-    display = Display(visible=0, size=(1024,768))
-    display.start()
     for config in configs:
         username = config["username"]
         pwd = config["pwd"]
@@ -57,7 +54,6 @@ if __name__ == "__main__":
         size = config["size"]
         t = Visvim(username,pwd,itemName,color,size)
         t.start()
-    display.stop()
 
 
 
