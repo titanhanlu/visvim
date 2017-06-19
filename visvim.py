@@ -118,6 +118,7 @@ class Visvim(threading.Thread):
                 self.driver.refresh()
                 continue
         self.driver.find_element(By.XPATH, "//input[@value='注文']").click()
+        print("sucess!")
 
     def run(self):
         display = Display(visible=0, size=(1024,768))
