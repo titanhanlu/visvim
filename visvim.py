@@ -121,7 +121,6 @@ class Visvim(threading.Thread):
         print("sucess!")
 
     def run(self):
-        t1 = time.time()
         display = Display(visible=0, size=(1024,768))
         display.start()
         chromeOptions = webdriver.ChromeOptions()
@@ -139,22 +138,10 @@ class Visvim(threading.Thread):
 
         self.driver = webdriver.Chrome(executable_path=chromePath,
                                   chrome_options=chromeOptions)  # Optional argument, if not specified will search path.
-        t2 = time.time()
         self.driver.get('https://shop.visvim.tv')
-        print t2 - t1
-        t1 = time.time()
         self.login(self.username, self.pwd)
-        t2 = time.time()
-        print t2 - t1
         self.toMainWeb()
-        t1 = time.time()
         item = self.findItem(self.itemName)
-        t2 = time.time()
-        print t2 - t1
-        t1 = time.time()
         self.buyItem(item, self.color, self.size)
-        t2 = time.time()
-        print(t2 - t1)
         self.driver.quit()
         display.stop()
-        
