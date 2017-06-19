@@ -7,6 +7,12 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import NoSuchElementException
 from pyvirtualdisplay import Display
+import platform
+
+chromeDriverPath_mac = "libs/chromedriver-mac"
+chromeDriverPath_linux = "libs/chromedriver-linux"
+chromeDriverPath_win = "libs/chromedriver.exe"
+
 
 class Visvim(threading.Thread):
     driver = None
@@ -120,8 +126,17 @@ class Visvim(threading.Thread):
         chromeOptions.add_argument("headless")
         prefs = {"profile.managed_default_content_settings.images": 2}
         chromeOptions.add_experimental_option("prefs", prefs)
+        chromePath = ""
 
-        self.driver = webdriver.Chrome(executable_path='libs/chromedriver',
+        sysstr = platform.system()
+        if (sysstr == "Windows"):
+            chromePath = chromeDriverPath_win
+        elif (sysstr == "Linux"):
+            chromePath = chromeDriverPath_linux
+        else:
+            chromePath = chromeDriverPath_mac
+
+        self.driver = webdriver.Chrome(executable_path=chromePath,
                                   chrome_options=chromeOptions)  # Optional argument, if not specified will search path.
         self.driver.get('https://shop.visvim.tv')
         self.login(self.username, self.pwd)
