@@ -4,7 +4,7 @@ import os,json
 import urllib2
 
 
-fileName = "./configOri"
+fileName = "./config"
 url = "http://bigota.miwifi.com/xiaoqiang/rom/config"
 
 def getConfig():
