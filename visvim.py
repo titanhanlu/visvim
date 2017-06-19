@@ -121,6 +121,7 @@ class Visvim(threading.Thread):
         print("sucess!")
 
     def run(self):
+        t1 = time.time()
         display = Display(visible=0, size=(1024,768))
         display.start()
         chromeOptions = webdriver.ChromeOptions()
@@ -144,6 +145,7 @@ class Visvim(threading.Thread):
         self.toMainWeb()
         item = self.findItem(self.itemName)
         self.buyItem(item, self.color, self.size)
-        time.sleep(2)
+        t2 = time.time()
+        print(t2 - t1)
         self.driver.quit()
         display.stop()
