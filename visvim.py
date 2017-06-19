@@ -6,6 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import NoSuchElementException
+from pyvirtualdisplay import Display
 
 class Visvim(threading.Thread):
     driver = None
@@ -113,6 +114,8 @@ class Visvim(threading.Thread):
         self.driver.find_element(By.XPATH, "//input[@value='注文']").click()
 
     def run(self):
+        display = Display(visible=0, size=(1024,768))
+        display.start()
         chromeOptions = webdriver.ChromeOptions()
         chromeOptions.add_argument("headless")
         prefs = {"profile.managed_default_content_settings.images": 2}
@@ -127,3 +130,4 @@ class Visvim(threading.Thread):
         self.buyItem(item, self.color, self.size)
         time.sleep(2)
         self.driver.quit()
+        display.stop()
