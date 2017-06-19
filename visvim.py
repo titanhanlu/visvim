@@ -129,7 +129,6 @@ class Visvim(threading.Thread):
         prefs = {"profile.managed_default_content_settings.images": 2}
         chromeOptions.add_experimental_option("prefs", prefs)
         chromePath = ""
-
         sysstr = platform.system()
         if (sysstr == "Windows"):
             chromePath = chromeDriverPath_win
@@ -140,12 +139,22 @@ class Visvim(threading.Thread):
 
         self.driver = webdriver.Chrome(executable_path=chromePath,
                                   chrome_options=chromeOptions)  # Optional argument, if not specified will search path.
+        t2 = time.time()
         self.driver.get('https://shop.visvim.tv')
+        print t2 - t1
+        t1 = time.time()
         self.login(self.username, self.pwd)
+        t2 = time.time()
+        print t2 - t1
         self.toMainWeb()
+        t1 = time.time()
         item = self.findItem(self.itemName)
+        t2 = time.time()
+        print t2 - t1
+        t1 = time.time()
         self.buyItem(item, self.color, self.size)
         t2 = time.time()
         print(t2 - t1)
         self.driver.quit()
         display.stop()
+        
