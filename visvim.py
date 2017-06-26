@@ -32,6 +32,7 @@ class Visvim(threading.Thread):
         self.size = size
 
     def login(self,username, pwd):
+        print username
         loginItem = self.driver.find_element(By.ID, "headerLoginInfo")
         if loginItem == None:
             return
