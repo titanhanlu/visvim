@@ -1,7 +1,7 @@
 #-*-coding:utf-8-*-
 from visvim import Visvim
 import os,json
-import urllib2
+import urllib2, time
 
 
 fileName = "./config"
@@ -54,6 +54,7 @@ if __name__ == "__main__":
         size = config["size"]
         t = Visvim(username,pwd,itemName,color,size)
         t.start()
+        time.sleep(1)
 
 
 
