@@ -8,6 +8,7 @@ from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import NoSuchElementException
 from pyvirtualdisplay import Display
 import platform
+import waiter
 
 chromeDriverPath_mac = "libs/chromedriver-mac"
 chromeDriverPath_linux = "libs/chromedriver-linux"
@@ -44,11 +45,13 @@ class Visvim(threading.Thread):
         sbmItem = self.driver.find_element(By.XPATH, xpathValue)
         sbmItem.click()
         WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "purchaceHistoryTab")))
+        print "login success!"
 
     def toMainWeb(self):
         headItem = self.driver.find_element(By.ID, "headerTitle")
         headItem.click()
         WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "news1")))
+        print "toMainWeb"
 
     def findItem(self,itemName):
         while True:
@@ -64,60 +67,59 @@ class Visvim(threading.Thread):
                 return findItems[0]
             time.sleep(0.1)
             self.driver.refresh()
+        print "find item!"
 
     def buyItem(self, item, color, size):
         item.click()
+        print "goto item page!"
         while True:
             try:
-                WebDriverWait(self.driver, 2).until(EC.presence_of_element_located((By.ID, "detailText")))
+                WebDriverWait(self.driver, 2, 0.1).until(EC.presence_of_element_located((By.ID, "detailText")))
                 break
             except Exception:
                 self.driver.refresh()
                 continue
         colorSelect = Select(self.driver.find_element(By.ID, "sel001"))
-        colorSelect.select_by_visible_text(color)
-        WebDriverWait(self.driver, 2).until(EC.element_to_be_clickable((By.ID, "sel002")))
-        sizeSelect = Select(self.driver.find_element(By.ID, "sel002"))
+        selectedItem = colorSelect.first_selected_option
+        if selectedItem.text != color:
+            colorSelect.select_by_visible_text(color)
+        sizeElement = WebDriverWait(self.driver, 2, 0.1).until(waiter.options_more_than_one((By.ID, "sel002")))
+        sizeSelect = Select(sizeElement)
         sizeSelect.select_by_visible_text(size)
+        print "color, size select OK!"
         WebDriverWait(self.driver, 3).until(EC.element_to_be_clickable((By.ID, "btn001")))
         self.driver.find_element(By.ID, "btn001").click()
-        WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "//a[@onclick='checkout()']")))
-        checkoutBtn = self.driver.find_element(By.XPATH, "//a[@onclick='checkout()']")
+        checkoutBtn = WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "//a[@onclick='checkout()']")))
         checkoutBtn.click()
+        print "goto checkout!"
         while True:
             try:
-                WebDriverWait(self.driver, 2).until(EC.presence_of_element_located((By.XPATH, "//input[@value='注文手続']")))
+                checkoutBtn = WebDriverWait(self.driver, 2, 0.1).until(EC.presence_of_element_located((By.XPATH, "//input[@value='注文手続']")))
                 break
             except Exception:
                 self.driver.refresh()
                 continue
-        checkoutBtn = self.driver.find_element(By.XPATH, "//input[@value='注文手続']")
         checkoutBtn.click()
+        print "goto payment page"
         while True:
             try:
-                WebDriverWait(self.driver, 2).until(EC.presence_of_element_located((By.ID, "sel201_1")))
+                WebDriverWait(self.driver, 3, 0.1).until(EC.presence_of_element_located((By.ID, "sel201_21")))
                 break
             except Exception:
                 self.driver.refresh()
                 continue
-        self.driver.find_element(By.ID, "sel201_1").click()
+        self.driver.find_element(By.ID, "sel201_21").click()
         self.driver.find_element(By.ID, "continue_yes").click()
+        continueBtn = WebDriverWait(self.driver, 3, 0.1).until(EC.element_to_be_clickable((By.XPATH, "//input[@value='続ける']")))
+        continueBtn.click()
         while True:
             try:
-                WebDriverWait(self.driver, 2).until(EC.element_to_be_clickable((By.XPATH, "//input[@value='続ける']")))
+                WebDriverWait(self.driver, 2, 0.1).until(EC.presence_of_element_located((By.XPATH, "//input[@value='注文']")))
                 break
             except Exception:
                 self.driver.refresh()
                 continue
-        self.driver.find_element(By.XPATH, "//input[@value='続ける']").click()
-        while True:
-            try:
-                WebDriverWait(self.driver, 2).until(EC.presence_of_element_located((By.XPATH, "//input[@value='注文']")))
-                break
-            except Exception:
-                self.driver.refresh()
-                continue
-        self.driver.find_element(By.XPATH, "//input[@value='注文']").click()
+        # self.driver.find_element(By.XPATH, "//input[@value='注文']").click()
         print("sucess!")
 
     def run(self):
@@ -127,7 +129,6 @@ class Visvim(threading.Thread):
         chromeOptions.add_argument("headless")
         prefs = {"profile.managed_default_content_settings.images": 2}
         chromeOptions.add_experimental_option("prefs", prefs)
-        chromePath = ""
         sysstr = platform.system()
         if (sysstr == "Windows"):
             chromePath = chromeDriverPath_win
