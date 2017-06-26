@@ -114,11 +114,12 @@ class Visvim(threading.Thread):
         continueBtn.click()
         while True:
             try:
-                WebDriverWait(self.driver, 2, 0.1).until(EC.presence_of_element_located((By.XPATH, "//input[@value='注文']")))
+                finalbtn = WebDriverWait(self.driver, 2, 0.1).until(EC.presence_of_element_located((By.XPATH, "//input[@value='注文']")))
                 break
             except Exception:
                 self.driver.refresh()
                 continue
+        finalbtn.click()
         # self.driver.find_element(By.XPATH, "//input[@value='注文']").click()
         print("sucess!")
 
