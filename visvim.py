@@ -9,10 +9,12 @@ from selenium.common.exceptions import NoSuchElementException
 from pyvirtualdisplay import Display
 import platform
 import waiter
+from selenium.common.exceptions import TimeoutException
 
 chromeDriverPath_mac = "libs/chromedriver-mac"
 chromeDriverPath_linux = "libs/chromedriver-linux"
 chromeDriverPath_win = "libs/chromedriver.exe"
+MAIN_URL = "https://shop.visvim.tv"
 
 
 class Visvim(threading.Thread):
@@ -31,17 +33,17 @@ class Visvim(threading.Thread):
         self.color = color
         self.size = size
 
-    def login(self,username, pwd):
-        print username
+    def login(self):
+        print self.username
         loginItem = self.driver.find_element(By.ID, "headerLoginInfo")
         if loginItem == None:
             return
         loginItem.click()
         WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "txt001")))
         usernameItem = self.driver.find_element(By.ID, "txt001")
-        usernameItem.send_keys(username)
+        usernameItem.send_keys(self.username)
         pwdItem = self.driver.find_element(By.ID, "txt002")
-        pwdItem.send_keys(pwd)
+        pwdItem.send_keys(self.pwd)
         xpathValue = "//input[@value='ログイン']"
         sbmItem = self.driver.find_element(By.XPATH, xpathValue)
         sbmItem.click()
@@ -54,12 +56,12 @@ class Visvim(threading.Thread):
         WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "news1")))
         print "toMainWeb"
 
-    def findItem(self,itemName):
+    def findItem(self):
         while True:
             try:
                 WebDriverWait(self.driver, 2).until(EC.presence_of_element_located((By.ID, "headerLocation")))
                 newRelease = self.driver.find_element(By.CSS_SELECTOR, "div.selectItemBoxes.clearfix")
-                findItems = newRelease.find_elements(By.PARTIAL_LINK_TEXT, itemName)
+                findItems = newRelease.find_elements(By.PARTIAL_LINK_TEXT, self.itemName)
             except Exception:
                 self.driver.refresh()
                 continue
@@ -70,7 +72,23 @@ class Visvim(threading.Thread):
             self.driver.refresh()
         print "find item!"
 
-    def buyItem(self, item, color, size):
+    def chooseItem(self):
+        while True:
+            try:
+                colorElement = WebDriverWait(self.driver, 1, 0.1).until(waiter.find_expected_option((By.ID, "sel001"), self.color))
+                colorSelect = Select(colorElement)
+                colorSelect.select_by_visible_text(self.color)
+                sizeElement = WebDriverWait(self.driver, 1, 0.1).until(waiter.find_expected_option((By.ID, "sel002"), self.size))
+                sizeSelect = Select(sizeElement)
+                sizeSelect.select_by_visible_text(self.size)
+                print "color, size select OK!"
+                break
+            except TimeoutException:
+                self.toMainWeb()
+                item = self.findItem()
+                item.click()
+
+    def buyItem(self, item):
         item.click()
         print "goto item page!"
         while True:
@@ -80,14 +98,7 @@ class Visvim(threading.Thread):
             except Exception:
                 self.driver.refresh()
                 continue
-        colorSelect = Select(self.driver.find_element(By.ID, "sel001"))
-        selectedItem = colorSelect.first_selected_option
-        if selectedItem.text != color:
-            colorSelect.select_by_visible_text(color)
-        sizeElement = WebDriverWait(self.driver, 2, 0.1).until(waiter.options_more_than_one((By.ID, "sel002")))
-        sizeSelect = Select(sizeElement)
-        sizeSelect.select_by_visible_text(size)
-        print "color, size select OK!"
+        self.chooseItem()
         WebDriverWait(self.driver, 3).until(EC.element_to_be_clickable((By.ID, "btn001")))
         self.driver.find_element(By.ID, "btn001").click()
         checkoutBtn = WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "//a[@onclick='checkout()']")))
@@ -104,12 +115,13 @@ class Visvim(threading.Thread):
         print "goto payment page"
         while True:
             try:
-                WebDriverWait(self.driver, 3, 0.1).until(EC.presence_of_element_located((By.ID, "sel201_21")))
+                payMethodItem =  WebDriverWait(self.driver, 3, 0.1).until(EC.visibility_of_element_located((By.ID, "sel201_21")))
                 break
             except Exception:
                 self.driver.refresh()
                 continue
-        self.driver.find_element(By.ID, "sel201_21").click()
+        self.driver.execute_script("arguments[0].scrollIntoView()", payMethodItem)
+        payMethodItem.click()
         self.driver.find_element(By.ID, "continue_yes").click()
         continueBtn = WebDriverWait(self.driver, 3, 0.1).until(EC.element_to_be_clickable((By.XPATH, "//input[@value='続ける']")))
         continueBtn.click()
@@ -120,7 +132,7 @@ class Visvim(threading.Thread):
             except Exception:
                 self.driver.refresh()
                 continue
-        finalbtn.click()
+        # finalbtn.click()
         # self.driver.find_element(By.XPATH, "//input[@value='注文']").click()
         print("sucess!")
 
@@ -128,7 +140,7 @@ class Visvim(threading.Thread):
         display = Display(visible=0, size=(1024,768))
         display.start()
         chromeOptions = webdriver.ChromeOptions()
-        chromeOptions.add_argument("headless")
+        # chromeOptions.add_argument("headless")
         prefs = {"profile.managed_default_content_settings.images": 2}
         chromeOptions.add_experimental_option("prefs", prefs)
         sysstr = platform.system()
@@ -141,10 +153,10 @@ class Visvim(threading.Thread):
 
         self.driver = webdriver.Chrome(executable_path=chromePath,
                                   chrome_options=chromeOptions)  # Optional argument, if not specified will search path.
-        self.driver.get('https://shop.visvim.tv')
-        self.login(self.username, self.pwd)
+        self.driver.get(MAIN_URL)
+        self.login()
         self.toMainWeb()
-        item = self.findItem(self.itemName)
-        self.buyItem(item, self.color, self.size)
-        self.driver.quit()
+        item = self.findItem()
+        self.buyItem(item)
+        # self.driver.quit()
         display.stop()

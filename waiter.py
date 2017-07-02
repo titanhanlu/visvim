@@ -14,6 +14,18 @@ class options_more_than_one(object):
         else:
             return False
 
+class find_expected_option(object):
+    def __init__(self, locator, optionText):
+        self.locator = locator
+        self.text = optionText
+
+    def __call__(self, driver):
+        element = _find_element(driver, self.locator)
+        for option in  Select(element).options:
+            if option.text == self.text:
+                return  element
+        return False
+
 def _find_element(driver, by):
     """Looks up an element. Logs and re-raises ``WebDriverException``
     if thrown."""
