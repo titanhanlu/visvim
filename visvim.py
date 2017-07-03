@@ -120,7 +120,6 @@ class Visvim(threading.Thread):
             except Exception:
                 self.driver.refresh()
                 continue
-        self.driver.execute_script("arguments[0].scrollIntoView()", payMethodItem)
         payMethodItem.click()
         self.driver.find_element(By.ID, "continue_yes").click()
         continueBtn = WebDriverWait(self.driver, 3, 0.1).until(EC.element_to_be_clickable((By.XPATH, "//input[@value='続ける']")))
@@ -132,7 +131,7 @@ class Visvim(threading.Thread):
             except Exception:
                 self.driver.refresh()
                 continue
-        # finalbtn.click()
+        finalbtn.click()
         # self.driver.find_element(By.XPATH, "//input[@value='注文']").click()
         print("sucess!")
 
@@ -140,7 +139,7 @@ class Visvim(threading.Thread):
         display = Display(visible=0, size=(1024,768))
         display.start()
         chromeOptions = webdriver.ChromeOptions()
-        # chromeOptions.add_argument("headless")
+        chromeOptions.add_argument("headless")
         prefs = {"profile.managed_default_content_settings.images": 2}
         chromeOptions.add_experimental_option("prefs", prefs)
         sysstr = platform.system()
@@ -158,5 +157,5 @@ class Visvim(threading.Thread):
         self.toMainWeb()
         item = self.findItem()
         self.buyItem(item)
-        # self.driver.quit()
+        self.driver.quit()
         display.stop()
