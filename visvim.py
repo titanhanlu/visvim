@@ -56,7 +56,7 @@ class Visvim(threading.Thread):
         WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.ID, "news1")))
         print "toMainWeb"
 
-    def findItem(self):
+    def gotoItemPage(self):
         while True:
             try:
                 WebDriverWait(self.driver, 2).until(EC.presence_of_element_located((By.ID, "headerLocation")))
@@ -67,10 +67,20 @@ class Visvim(threading.Thread):
                 continue
             # driver.execute_script("window.location.reload(true)")
             if len(findItems) != 0:
-                return findItems[0]
+                item = findItems[0]
+                break
             time.sleep(0.1)
             self.driver.refresh()
         print "find item!"
+        item.click()
+        print "goto item page!"
+        while True:
+            try:
+                WebDriverWait(self.driver, 2, 0.1).until(EC.presence_of_element_located((By.ID, "detailText")))
+                break
+            except Exception:
+                self.driver.refresh()
+                continue
 
     def chooseItem(self):
         while True:
@@ -85,20 +95,27 @@ class Visvim(threading.Thread):
                 break
             except TimeoutException:
                 self.toMainWeb()
-                item = self.findItem()
-                item.click()
+                self.gotoItemPage()
 
-    def buyItem(self, item):
-        item.click()
-        print "goto item page!"
-        while True:
-            try:
-                WebDriverWait(self.driver, 2, 0.1).until(EC.presence_of_element_located((By.ID, "detailText")))
-                break
-            except Exception:
-                self.driver.refresh()
-                continue
-        self.chooseItem()
+    def chooseMultiItem(self):
+        colorElement = WebDriverWait(self.driver, 1, 0.1).until(
+            waiter.options_more_than_one((By.ID, "sel001")))
+        colorSelect = Select(colorElement)
+        colorSelectLen = len(colorSelect.options)
+        for i in range(1, colorSelectLen):
+            colorSelect.select_by_index(i)
+            sizeElement = WebDriverWait(self.driver, 1, 0.3).until(
+                waiter.options_more_than_one((By.ID, "sel002")))
+            sizeSelect = Select(sizeElement)
+            sizeSelectLen = len(sizeSelect.options)
+            for j in range(1, sizeSelectLen):
+                sizeSelect.select_by_index(j)
+                time.sleep(0.5)
+                if self.driver.find_element(By.ID, "btn001").is_enabled():
+                    return
+        print "color, size select OK!"
+
+    def buyItem(self):
         WebDriverWait(self.driver, 3).until(EC.element_to_be_clickable((By.ID, "btn001")))
         self.driver.find_element(By.ID, "btn001").click()
         checkoutBtn = WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "//a[@onclick='checkout()']")))
@@ -135,8 +152,36 @@ class Visvim(threading.Thread):
         # self.driver.find_element(By.XPATH, "//input[@value='注文']").click()
         print("sucess!")
 
+    def buyOneItem(self):
+        self.driver.get(MAIN_URL)
+        self.login()
+        self.toMainWeb()
+        self.gotoItemPage()
+        self.chooseItem()
+        self.buyItem()
+        self.driver.quit()
+
+    def buyMultiItem(self):
+        self.driver.get(MAIN_URL)
+        self.login()
+        errorTime = 0
+        while True:
+            try:
+                self.toMainWeb()
+                self.gotoItemPage()
+                self.chooseMultiItem()
+                self.buyItem()
+            except Exception:
+                errorTime += 1
+                if errorTime < 5:
+                    continue
+                else:
+                    break
+        self.driver.quit()
+
+
     def run(self):
-        display = Display(visible=0, size=(1024,768))
+        display = Display(visible=0, size=(1024, 768))
         display.start()
         chromeOptions = webdriver.ChromeOptions()
         chromeOptions.add_argument("headless")
@@ -152,10 +197,8 @@ class Visvim(threading.Thread):
 
         self.driver = webdriver.Chrome(executable_path=chromePath,
                                   chrome_options=chromeOptions)  # Optional argument, if not specified will search path.
-        self.driver.get(MAIN_URL)
-        self.login()
-        self.toMainWeb()
-        item = self.findItem()
-        self.buyItem(item)
-        self.driver.quit()
+        if self.color == "*":
+            self.buyMultiItem()
+        else:
+            self.buyOneItem()
         display.stop()
